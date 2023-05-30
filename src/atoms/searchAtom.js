@@ -2,7 +2,7 @@ import { atom } from "recoil";
 
 export const orgNameState = atom({
   key: "orgNameState",
-  default: "Netflix",
+  default: "",
 });
 
 export const repoUrl = atom({
