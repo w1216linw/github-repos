@@ -21,7 +21,7 @@ const Commits = () => {
     fetchCommits();
   }, [commitsUrl]);
   return (
-    <div>
+    <div className="min-h-screen">
       <header className="h-20 px-10 items-center flex">
         <button onClick={() => router.push("/")}>back</button>
         <h1 className="text-3xl flex-grow text-center ">{name}</h1>

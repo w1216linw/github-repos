@@ -1,7 +1,7 @@
 import { atom } from "recoil";
 
-export const orgs = atom({
-  key: "orgName",
+export const orgNameState = atom({
+  key: "orgNameState",
   default: "Netflix",
 });
 

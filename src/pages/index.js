@@ -1,4 +1,4 @@
-import { cacheRepos, repoUrl } from "@/atoms/searchAtom";
+import { cacheRepos, orgNameState, repoUrl } from "@/atoms/searchAtom";
 import { octokit } from "@/lib/octokit";
 import { sortByStars } from "@/utility/sortByStars";
 import {
@@ -13,25 +13,40 @@ import { useRecoilState, useSetRecoilState } from "recoil";
 
 export default function Home() {
   const router = useRouter();
-  const [searchKeyword, setSearchKeyword] = useState("Netflix");
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [repos, setRepos] = useState([]);
+  const [error, setError] = useState("");
+
   const setRepoURL = useSetRecoilState(repoUrl);
   const [cache, setCache] = useRecoilState(cacheRepos);
+  const [orgName, setOrgName] = useRecoilState(orgNameState);
 
   const fetchOrgsRepo = async () => {
-    const res = await octokit.request("GET /orgs/{org}/repos", {
-      org: "netflix",
-    });
+    try {
+      const res = await octokit.request("GET /orgs/{org}/repos", {
+        org: searchKeyword,
+      });
 
-    let temp = res.data;
-    temp.sort(sortByStars);
-    setCache(temp);
-    setRepos(temp);
+      let sortedRepos = res.data;
+      sortedRepos.sort(sortByStars);
+      setCache(sortedRepos);
+      setRepos(sortedRepos);
+      setError("");
+    } catch (error) {
+      setError(`${searchKeyword} has no repositories`);
+    }
   };
 
   const goCommits = (repo) => {
     setRepoURL(repo.commits_url);
     router.push(`/commits/${repo.name}`);
+  };
+
+  const handleSearch = () => {
+    if (!searchKeyword) return;
+
+    setOrgName(searchKeyword);
+    fetchOrgsRepo();
   };
 
   useEffect(() => {
@@ -41,15 +56,24 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen py-10">
       <header className="flex justify-center h-20 items-center gap-3 mb-8">
-        <input type="text" className="w-full max-w-xs py-2 px-1" />
-        <button onClick={fetchOrgsRepo}>
+        <input
+          type="text"
+          className="w-full max-w-xs py-2 px-1"
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+        />
+        <button onClick={handleSearch}>
           <MagnifyingGlassIcon className="w-6 h-6" />
         </button>
       </header>
+      {error && <p className="text-center">{error}</p>}
+      <h1 className="text-center font-bold text-3xl my-4 capitalize">
+        {orgName && orgName}
+      </h1>
       {repos?.length >= 1 && (
-        <div className="grid grid-cols-3 gap-4 max-w-6xl m-auto">
+        <div className="px-10 lg:px-5 grid lg:grid-cols-3 md:grid-cols-2 gap-4 max-w-6xl m-auto sm:grid-cols-1">
           {repos?.map((repo) => (
             <div
               key={repo.id}
